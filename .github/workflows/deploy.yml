@@ -25,7 +25,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
-
+          
+      # -----------------------------
+      # pnpm setup
+      # -----------------------------
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+        
       # -----------------------------
       # Node
       # -----------------------------
@@ -33,13 +40,6 @@ jobs:
         with:
           node-version: 22
           cache: "pnpm"
-      
-      # -----------------------------
-      # pnpm setup
-      # -----------------------------
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 9
       
       # -----------------------------
       # Install dependencies
