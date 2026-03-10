@@ -41,9 +41,9 @@ jobs:
           version: 9
 
       # -----------------------------
-      # pnpm migration check
+      # Detect pnpm migration
       # -----------------------------
-      - name: Detects pnpm migration
+      - name: Detect pnpm migration
         id: pnpmcheck
         run: |
           if [ -f pnpm-lock.yaml ]; then
@@ -52,9 +52,21 @@ jobs:
             echo "pnpm_ready=false" >> $GITHUB_OUTPUT
           fi
 
-      # -----------------------------
-      # Auto migrate to pnpm
-      # -----------------------------
+# -----------------------------
+# Install dependencies (pnpm)
+# -----------------------------
+      - name: Install dependencies
+        if: steps.pnpmcheck.outputs.pnpm_ready == 'true'
+        run: |
+          if git diff --name-only HEAD^ HEAD | grep -q "package.json"; then
+            pnpm install
+          else
+            pnpm install --frozen-lockfile
+          fi
+
+# -----------------------------
+# Auto migrate to pnpm
+# -----------------------------
       - name: Migrate to pnpm
         if: steps.pnpmcheck.outputs.pnpm_ready == 'false'
         run: |
@@ -64,9 +76,9 @@ jobs:
           pnpm import
           pnpm install
 
-      # -----------------------------
-      # Commit pnpm migration
-      # -----------------------------
+# -----------------------------
+# Commit pnpm migration
+# -----------------------------
       - name: Commit pnpm migration
         if: steps.pnpmcheck.outputs.pnpm_ready == 'false' && github.event_name == 'push'
         run: |
