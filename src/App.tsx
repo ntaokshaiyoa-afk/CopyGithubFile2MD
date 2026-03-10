@@ -4,8 +4,8 @@ import FileContent from './FileContent';
 
 export default function App() {
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
-  const owner = 'ユーザー名';
-  const repo = 'リポジトリ名';
+  const owner = 'ntaokshaiyoa-afk';
+  const repo = 'CopyGithubFile2MD';
 
   return (
     <div>
