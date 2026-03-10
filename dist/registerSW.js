@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/CopyGithubFile2MD/sw.js', { scope: '/CopyGithubFile2MD/' })})}
