@@ -12,15 +12,18 @@ export default function FileContent({ files, owner, repo }: FileContentProps) {
 
   useEffect(() => {
     async function loadContent() {
-      let md = '';
-      for (const file of files) {
-        const text = await fetchFileContent(owner, repo, file);
-        md += `\`\`\`${file}\n${text}\n\`\`\`\n`;
-      }
-      setContent(md);
+      const results = await Promise.all(
+        files.map(async (file) => {
+          const text = await fetchFileContent(owner, repo, file)
+          return `\`\`\`${file}\n${text}\n\`\`\``
+        })
+      )
+  
+      setContent(results.join('\n'))
     }
-    if (files.length) loadContent();
-  }, [files, owner, repo]);
+  
+    if (files.length) loadContent()
+  }, [files, owner, repo])
 
   const copyToClipboard = () => navigator.clipboard.writeText(content);
 
