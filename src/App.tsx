@@ -20,7 +20,7 @@ export default function App() {
   if (!owner || !repo) {
     return (
       <div style={{ padding: 20 }}>
-        <h1>GitHub Markdown連結ビューア</h1>
+        <h1>GitHub Markdown連結ビューアA</h1>
         <p>URLに repo パラメータを指定してください</p>
 
         <pre>
