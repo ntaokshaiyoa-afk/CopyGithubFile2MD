@@ -14,8 +14,15 @@ interface Node {
   children?: Node[]
 }
 
+interface TempNode {
+  name: string
+  path: string
+  type: 'file' | 'dir'
+  children?: Record<string, TempNode>
+}
+
 function buildTree(paths: string[]): Node[] {
-  const root: Record<string, Node> = {}
+  const root: Record<string, TempNode> = {}
 
   for (const path of paths) {
     const parts = path.split('/')
@@ -31,18 +38,23 @@ function buildTree(paths: string[]): Node[] {
           path: currentPath,
           type: index === parts.length - 1 ? 'file' : 'dir',
           children: {},
-        } as any
+        }
       }
 
       if (index < parts.length - 1) {
-        current = current[part].children as any
+        if (!current[part].children) {
+          current[part].children = {}
+        }
+        current = current[part].children!
       }
     })
   }
 
-  function convert(obj: Record<string, Node>): Node[] {
-    return Object.values(obj).map((node: any) => ({
-      ...node,
+  function convert(obj: Record<string, TempNode>): Node[] {
+    return Object.values(obj).map((node) => ({
+      name: node.name,
+      path: node.path,
+      type: node.type,
       children: node.children ? convert(node.children) : undefined,
     }))
   }
@@ -69,7 +81,6 @@ export default function FileTree({ owner, repo, onSelect }: FileTreeProps) {
     else newSet.add(path)
 
     setSelected(newSet)
-
     onSelect(Array.from(newSet).join(','))
   }
 
@@ -82,7 +93,7 @@ export default function FileTree({ owner, repo, onSelect }: FileTreeProps) {
     setOpen(newOpen)
   }
 
-  function renderNode(node: Node, depth = 0): any {
+  function renderNode(node: Node, depth = 0): React.ReactNode {
     if (node.type === 'file') {
       return (
         <div key={node.path} style={{ paddingLeft: depth * 16 }}>
