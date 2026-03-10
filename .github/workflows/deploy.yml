@@ -1,34 +1,103 @@
-name: Deploy to GitHub Pages
+name: CI and Deploy
 
 on:
   push:
-    branches:
-      - main
+    branches: ["main"]
+  pull_request:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      # -----------------------------
+      # Checkout
+      # -----------------------------
+      - uses: actions/checkout@v4
         with:
-          node-version: '20'
-          cache: 'pnpm'
+          fetch-depth: 2
 
-      - name: Install pnpm
-        run: npm install -g pnpm
+      # -----------------------------
+      # Node setup
+      # -----------------------------
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
 
+      # -----------------------------
+      # pnpm setup
+      # -----------------------------
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      # -----------------------------
+      # Install dependencies
+      # -----------------------------
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
+      # -----------------------------
+      # Detect changes to rebuild
+      # -----------------------------
+      - name: Detect changes
+        id: changes
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1)
+          if echo "$CHANGED" | grep -E '^(src|public|vite.config|package.json)'; then
+            echo "build_required=true" >> $GITHUB_OUTPUT
+          else
+            echo "build_required=false" >> $GITHUB_OUTPUT
+          fi
+
+      # -----------------------------
+      # Lint
+      # -----------------------------
+      - name: Lint
+        run: pnpm run lint
+
+      # -----------------------------
+      # Typecheck
+      # -----------------------------
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      # -----------------------------
+      # Build (only if required)
+      # -----------------------------
       - name: Build
+        if: steps.changes.outputs.build_required == 'true'
         run: pnpm run build
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+      # -----------------------------
+      # Setup Pages
+      # -----------------------------
+      - name: Setup Pages
+        if: steps.changes.outputs.build_required == 'true'
+        uses: actions/configure-pages@v4
+
+      # -----------------------------
+      # Upload artifact
+      # -----------------------------
+      - name: Upload artifact
+        if: steps.changes.outputs.build_required == 'true'
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          path: ./dist
+
+      # -----------------------------
+      # Deploy
+      # -----------------------------
+      - name: Deploy
+        if: steps.changes.outputs.build_required == 'true'
+        uses: actions/deploy-pages@v4
