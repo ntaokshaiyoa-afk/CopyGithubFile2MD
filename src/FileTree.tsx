@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react"
-import { fetchRepoTree } from "./github"
+import React, { useState, useEffect } from 'react'
+import { fetchRepoTree } from './github'
 
 interface FileTreeProps {
   owner: string
@@ -12,7 +12,6 @@ interface TreeItem {
 }
 
 export default function FileTree({ owner, repo, onSelect }: FileTreeProps) {
-
   const [files, setFiles] = useState<string[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set())
 
@@ -23,7 +22,6 @@ export default function FileTree({ owner, repo, onSelect }: FileTreeProps) {
   }, [owner, repo])
 
   const toggleFile = (file: string) => {
-
     const newSet = new Set(selected)
 
     if (newSet.has(file)) newSet.delete(file)
@@ -31,7 +29,7 @@ export default function FileTree({ owner, repo, onSelect }: FileTreeProps) {
 
     setSelected(newSet)
 
-    onSelect(Array.from(newSet).join(","))
+    onSelect(Array.from(newSet).join(','))
   }
 
   return (
