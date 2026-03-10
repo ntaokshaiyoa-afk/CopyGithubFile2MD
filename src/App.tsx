@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import FileTree from './FileTree';
-import FileContent from './FileContent';
+import React, { useState } from 'react'
+import FileTree from './FileTree'
+import FileContent from './FileContent'
 
 export default function App() {
-  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
-  const owner = 'ntaokshaiyoa-afk';
-  const repo = 'CopyGithubFile2MD';
+  const [selectedFiles, setSelectedFiles] = useState<string[]>([])
+  const owner = 'ntaokshaiyoa-afk'
+  const repo = 'CopyGithubFile2MD'
 
   return (
     <div>
@@ -19,5 +19,5 @@ export default function App() {
         <FileContent owner={owner} repo={repo} files={selectedFiles} />
       )}
     </div>
-  );
+  )
 }
