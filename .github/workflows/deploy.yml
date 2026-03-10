@@ -61,7 +61,7 @@ jobs:
           echo "Migrating project to pnpm"
 
           # npm install
-          pnpm import
+          #pnpm import
           pnpm install
           
 # -----------------------------
