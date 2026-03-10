@@ -60,6 +60,15 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
 
         globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/api\.github\.com/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'github-api'
+            }
+          }
+        ],
       },
     }),
   ],
