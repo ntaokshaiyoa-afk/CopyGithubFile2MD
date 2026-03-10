@@ -43,7 +43,7 @@ jobs:
       # -----------------------------
       # pnpm migration check
       # -----------------------------
-      - name: Detect pnpm migration
+      - name: Detects pnpm migration
         id: pnpmcheck
         run: |
           if [ -f pnpm-lock.yaml ]; then
