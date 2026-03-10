@@ -20,6 +20,10 @@ export async function fetchRepoTree(
     `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`,
   )
 
+  if (!res.ok) {
+    throw new Error(`GitHub API error: ${res.status}`)
+  }
+  
   const data: GitHubTreeResponse = await res.json()
 
   return data.tree.filter((item) => item.type === 'blob')
