@@ -24,7 +24,7 @@ export default function App() {
         <p>URLに repo パラメータを指定してください</p>
 
         <pre>
-{`?repo=owner/repository
+          {`?repo=owner/repository
 
 例
 ?repo=facebook/react`}
@@ -35,14 +35,14 @@ export default function App() {
 
   return (
     <div style={{ padding: 20 }}>
-      <h1>{owner}/{repo}</h1>
+      <h1>
+        {owner}/{repo}
+      </h1>
 
       <FileTree
         owner={owner}
         repo={repo}
-        onSelect={(files) =>
-          setSelectedFiles(files.split(',').filter(Boolean))
-        }
+        onSelect={(files) => setSelectedFiles(files.split(',').filter(Boolean))}
       />
 
       {selectedFiles.length > 0 && (
