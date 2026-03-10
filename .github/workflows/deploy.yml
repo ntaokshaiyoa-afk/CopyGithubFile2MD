@@ -62,18 +62,6 @@ jobs:
           fi
 
       # -----------------------------
-      # Install dependencies
-      # -----------------------------
-      - name: Install dependencies
-        if: steps.pnpmcheck.outputs.pnpm_ready == 'true'
-        run: |
-          if git diff --name-only HEAD~1 | grep -q "package.json"; then
-            pnpm install
-          else
-            pnpm install --frozen-lockfile
-          fi
-
-      # -----------------------------
       # Cache vite
       # -----------------------------
       - uses: actions/cache@v4
@@ -90,7 +78,7 @@ jobs:
       # -----------------------------
       - name: Prettier
         run: |
-          CHANGED=$(git diff --name-only HEAD~1 \
+          CHANGED=$(git diff --name-only HEAD^ HEAD || true　\
             | grep -E '\.(js|ts|tsx|jsx|json|css|md)$' \
             | grep -v '^node_modules/' || true)
 
