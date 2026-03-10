@@ -9,7 +9,7 @@ export default function App() {
 
   return (
     <div>
-      <h1>GitHub Markdown連結ビューア</h1>
+      <h1>GitHub Markdown連結ビューア,</h1>
       <FileTree
         owner={owner}
         repo={repo}
