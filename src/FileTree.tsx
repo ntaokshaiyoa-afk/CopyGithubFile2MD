@@ -1,29 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import { fetchRepoTree } from './github';
+import React, { useState, useEffect } from "react"
+import { fetchRepoTree } from "./github"
 
 interface FileTreeProps {
-  owner: string;
-  repo: string;
-  onSelect: (file: string) => void;
+  owner: string
+  repo: string
+  onSelect: (file: string) => void
+}
+
+interface TreeItem {
+  path: string
 }
 
 export default function FileTree({ owner, repo, onSelect }: FileTreeProps) {
-  const [files, setFiles] = useState<string[]>([]);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const [files, setFiles] = useState<string[]>([])
+  const [selected, setSelected] = useState<Set<string>>(new Set())
 
   useEffect(() => {
-    fetchRepoTree(owner, repo).then((tree) => {
-      setFiles(tree.map((item: any) => item.path));
-    });
-  }, [owner, repo]);
+    fetchRepoTree(owner, repo).then((tree: TreeItem[]) => {
+      setFiles(tree.map((item) => item.path))
+    })
+  }, [owner, repo])
 
   const toggleFile = (file: string) => {
-    const newSet = new Set(selected);
-    if (newSet.has(file)) newSet.delete(file);
-    else newSet.add(file);
-    setSelected(newSet);
-    onSelect(Array.from(newSet).join(','));
-  };
+
+    const newSet = new Set(selected)
+
+    if (newSet.has(file)) newSet.delete(file)
+    else newSet.add(file)
+
+    setSelected(newSet)
+
+    onSelect(Array.from(newSet).join(","))
+  }
 
   return (
     <div>
@@ -38,5 +47,5 @@ export default function FileTree({ owner, repo, onSelect }: FileTreeProps) {
         </div>
       ))}
     </div>
-  );
+  )
 }
