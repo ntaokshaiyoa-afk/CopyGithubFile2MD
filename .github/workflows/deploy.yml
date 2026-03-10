@@ -53,6 +53,18 @@ jobs:
           fi
 
 # -----------------------------
+# Auto migrate to pnpm
+# -----------------------------
+      - name: Migrate to pnpm
+        if: steps.pnpmcheck.outputs.pnpm_ready == 'false'
+        run: |
+          echo "Migrating project to pnpm"
+
+          npm install
+          pnpm import
+          pnpm install
+          
+# -----------------------------
 # Install dependencies (pnpm)
 # -----------------------------
       - name: Install dependencies
@@ -64,17 +76,6 @@ jobs:
             pnpm install --frozen-lockfile
           fi
 
-# -----------------------------
-# Auto migrate to pnpm
-# -----------------------------
-      - name: Migrate to pnpm
-        if: steps.pnpmcheck.outputs.pnpm_ready == 'false'
-        run: |
-          echo "Migrating project to pnpm"
-
-          npm install
-          pnpm import
-          pnpm install
 
 # -----------------------------
 # Commit pnpm migration
