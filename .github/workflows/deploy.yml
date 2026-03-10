@@ -27,12 +27,11 @@ jobs:
           fetch-depth: 2
 
       # -----------------------------
-      # Node setup
+      # Node
       # -----------------------------
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
 
       # -----------------------------
       # pnpm setup
@@ -42,18 +41,59 @@ jobs:
           version: 9
 
       # -----------------------------
-      # Install dependencies
+      # pnpm migration check
       # -----------------------------
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Detect pnpm migration
+        id: pnpmcheck
+        run: |
+          if [ -f pnpm-lock.yaml ]; then
+            echo "pnpm_ready=true" >> $GITHUB_OUTPUT
+          else
+            echo "pnpm_ready=false" >> $GITHUB_OUTPUT
+          fi
 
       # -----------------------------
-      # Detect changes to rebuild
+      # Auto migrate to pnpm
+      # -----------------------------
+      - name: Migrate to pnpm
+        if: steps.pnpmcheck.outputs.pnpm_ready == 'false'
+        run: |
+          echo "Migrating project to pnpm"
+
+          npm install
+          pnpm import
+          pnpm install
+
+      # -----------------------------
+      # Commit pnpm migration
+      # -----------------------------
+      - name: Commit pnpm migration
+        if: steps.pnpmcheck.outputs.pnpm_ready == 'false' && github.event_name == 'push'
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
+          git add pnpm-lock.yaml
+          git commit -m "auto migrate to pnpm"
+          git push
+
+      # -----------------------------
+      # Cache pnpm
+      # -----------------------------
+      - uses: actions/setup-node@v4
+        if: steps.pnpmcheck.outputs.pnpm_ready == 'true'
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # -----------------------------
+      # Detect changes
       # -----------------------------
       - name: Detect changes
         id: changes
         run: |
           CHANGED=$(git diff --name-only HEAD~1)
+
           if echo "$CHANGED" | grep -E '^(src|public|vite.config|package.json)'; then
             echo "build_required=true" >> $GITHUB_OUTPUT
           else
@@ -61,43 +101,91 @@ jobs:
           fi
 
       # -----------------------------
+      # Install dependencies
+      # -----------------------------
+      - name: Install dependencies
+        if: steps.pnpmcheck.outputs.pnpm_ready == 'true'
+        run: |
+          if git diff --name-only HEAD~1 | grep -q "package.json"; then
+            pnpm install
+          else
+            pnpm install --frozen-lockfile
+          fi
+
+      # -----------------------------
+      # Cache vite
+      # -----------------------------
+      - uses: actions/cache@v4
+        with:
+          path: |
+            node_modules/.vite
+            dist
+          key: vite-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            vite-${{ runner.os }}-
+
+      # -----------------------------
+      # Prettier
+      # -----------------------------
+      - name: Prettier
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1 \
+            | grep -E '\.(js|ts|tsx|jsx|json|css|md)$' \
+            | grep -v '^node_modules/' || true)
+
+          if [ -n "$CHANGED" ]; then
+            pnpm exec prettier --write $CHANGED
+          else
+            echo "No files to format"
+          fi
+
+      # -----------------------------
+      # Auto format commit
+      # -----------------------------
+      - name: Commit formatting
+        if: github.event_name == 'push'
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
+          git add .
+          git restore --staged .github/workflows || true
+
+          if ! git diff --cached --quiet; then
+            git commit -m "auto format"
+            git push
+          fi
+
+      # -----------------------------
       # Lint
       # -----------------------------
-      - name: Lint
-        run: pnpm run lint
+      - run: pnpm run lint
 
       # -----------------------------
       # Typecheck
       # -----------------------------
-      - name: Typecheck
-        run: pnpm run typecheck
+      - run: pnpm run typecheck
 
       # -----------------------------
-      # Build (only if required)
+      # Build
       # -----------------------------
       - name: Build
         if: steps.changes.outputs.build_required == 'true'
         run: pnpm run build
 
       # -----------------------------
-      # Setup Pages
+      # Deploy
       # -----------------------------
       - name: Setup Pages
-        if: steps.changes.outputs.build_required == 'true'
+        if: github.event_name == 'push' && steps.changes.outputs.build_required == 'true'
         uses: actions/configure-pages@v4
 
-      # -----------------------------
-      # Upload artifact
-      # -----------------------------
       - name: Upload artifact
-        if: steps.changes.outputs.build_required == 'true'
+        if: github.event_name == 'push' && steps.changes.outputs.build_required == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
 
-      # -----------------------------
-      # Deploy
-      # -----------------------------
       - name: Deploy
-        if: steps.changes.outputs.build_required == 'true'
+        if: github.event_name == 'push' && steps.changes.outputs.build_required == 'true'
         uses: actions/deploy-pages@v4
