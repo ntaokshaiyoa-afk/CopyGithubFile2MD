@@ -65,9 +65,9 @@ export default defineConfig({
             urlPattern: /^https:\/\/api\.github\.com/,
             handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'github-api'
-            }
-          }
+              cacheName: 'github-api',
+            },
+          },
         ],
       },
     }),
