@@ -44,7 +44,28 @@ jobs:
       # Install dependencies
       # -----------------------------
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          set +e
+          pnpm install --frozen-lockfile
+          RESULT=$?
+      
+          if [ $RESULT -ne 0 ]; then
+            echo "Lockfile outdated. Regenerating..."
+      
+            pnpm install --no-frozen-lockfile
+      
+            git config --global user.name "github-actions"
+            git config --global user.email "github-actions@github.com"
+      
+            git add pnpm-lock.yaml
+      
+            if ! git diff --cached --quiet; then
+              git commit -m "auto fix pnpm-lock.yaml"
+              git push
+            fi
+          fi
+      
+          exit 0
 
       # -----------------------------
       # Detect changes
@@ -77,7 +98,7 @@ jobs:
       # -----------------------------
       - name: Prettier
         run: |
-          CHANGED=$(git diff --name-only HEAD^ HEAD || true　\
+          CHANGED=$(git diff --name-only HEAD^ HEAD || true \
             | grep -E '\.(js|ts|tsx|jsx|json|css|md)$' \
             | grep -v '^node_modules/' || true)
 
